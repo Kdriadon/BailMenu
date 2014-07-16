@@ -1,0 +1,25 @@
+--Created by Phillsphan14
+
+if(SERVER) then
+	util.AddNetworkString("prisoner")
+	function see_bail_menu(ply)
+		umsg.Start("openbailmenu", ply)
+		umsg.End()
+		return ""
+	end
+	concommand.Add( "payoff",function( ply )
+   		ply.Addmoney(-5000)
+	end )
+
+	net.Receive("prisoner", function()
+		RunConsoleCommand("rp_unarrest", net.ReadString())
+		end)
+
+	hook.Add( "PlayerSay", 0, function( ply, text, team )
+		if ( string.sub( text, 1, 5 ) == "/bail" ) then
+			see_bail_menu(ply)
+			return ""
+		end
+	end )
+
+end
