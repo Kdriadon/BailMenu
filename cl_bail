@@ -1,0 +1,114 @@
+--Created by Phillsphan14
+
+if(CLIENT) then
+include("sv_player.lua")
+function bail_menu()
+		local lp = LocalPlayer()
+			backpanel = vgui.Create( "DFrame" )
+			backpanel:SetPos( ScrW()/2-250, ScrH()/2-250 )
+			backpanel:SetSize( 500, 455 )
+			backpanel:SetTitle( "Bail list" )
+			backpanel:SetVisible( true )
+			backpanel:SetDraggable( true )
+			backpanel:ShowCloseButton( true )
+			backpanel:MakePopup()
+			backpanel.Paint = function()
+				surface.SetDrawColor( 0, 0, 0, 220 )
+				surface.DrawRect( 0, 0, backpanel:GetWide(), backpanel:GetTall() )
+			end
+			baillist = vgui.Create( "DPanelList", backpanel )
+			baillist:SetPos( 5,25 )
+			baillist:SetSize( 490, 425 )
+			baillist:SetSpacing( 1 )
+			baillist:EnableHorizontal( false )
+			baillist:EnableVerticalScrollbar( true ) 
+
+			for k, v in pairs(player.GetAll()) do
+				if v.DarkRPVars.Arrested then
+					local bb = vgui.Create( "DButton", baillist )
+					bb:SetSize( 490, 30 )
+					bb:SetDisabled( false )
+					bb:SetText( "")
+					bb.Paint = function() 
+    					surface.SetDrawColor( 0, 123, 255, 255 ) 
+    					surface.DrawRect( 0, 0, 490, 30 )
+    					surface.SetTextColor( 255, 255, 255, 255 )
+    					surface.SetTextPos(bb:GetWide()/2 - 30, bb:GetTall()/2 - 8)
+    					surface.DrawText("Pay bail for "..v:Nick())
+    				end
+					bb.DoClick = function( button )
+					bail_payment(v:SteamID(),v:Nick(),v.DarkRPVars.job)
+				
+			end
+
+		baillist:AddItem(bb)
+
+		end
+		
+	end
+end
+usermessage.Hook("openbailmenu", bail_menu)
+
+
+function bail_payment(steamid,nick,job)
+
+	local bailprice = 5000
+	local lp = LocalPlayer()
+	local cpanel = vgui.Create( "DFrame" )
+	cpanel:SetPos( ScrW()/2-350, ScrH()/2-250 )
+	cpanel:SetSize( 300, 255 )
+	cpanel:SetTitle( "" )
+	cpanel:SetVisible( true )
+	cpanel:SetDraggable( true )
+	cpanel:ShowCloseButton( true )
+	cpanel:MakePopup()
+		cpanel.Paint = function()
+				surface.SetDrawColor( 0, 0, 0, 220 )
+				surface.DrawRect( 0, 0, cpanel:GetWide(), cpanel:GetTall() )
+			end
+	local PropertySheet = vgui.Create( "DPropertySheet", cpanel )
+	PropertySheet:SetPos( 5, 20 )
+	PropertySheet:SetSize( 290, 230 )
+	PropertySheet:SetSkin("DarkRP")
+
+	local det = vgui.Create("DLabel", PropertySheet)
+	
+	det:SetPos(100-80,108)
+	det:SetColor(Color(0,255,0,255))
+	det:SetFont("TargetID")
+	det:SetText("Amount: $"..bailprice.."")
+	det:SizeToContents()
+	local dets = vgui.Create("DLabel", PropertySheet)
+	dets:SetPos(11,25)
+	dets:SetFont("TargetID")
+	dets:SetText("Prisoner Name: "..nick.."\nPrisoner Job: "..job)
+	dets:SizeToContents()
+	local confirm = vgui.Create( "DButton", PropertySheet )
+	confirm:SetSize( 100, 30 )
+	confirm:SetPos( 80, 135 )
+	confirm:SetText( "" )
+	confirm.Paint = function() 
+    	surface.SetDrawColor( 0, 123, 255, 255 ) 
+    	surface.DrawRect( 0, 0, 490, 30 )
+    	surface.SetTextColor( 255, 255, 255, 255 )
+    	surface.SetTextPos(confirm:GetWide()/2 - 20, confirm:GetTall()/2 - 10)
+    	surface.DrawText("Accept")
+    				end
+	confirm.DoClick = function( button )
+
+		if (LocalPlayer():canAfford(bailprice)) then
+					RunConsoleCommand("paybail")
+					net.Start("prisoner")
+					net.WriteString(tostring(nick))
+					net.SendToServer()
+					lp:ChatPrint("Thank you for your payment.")
+					cpanel:Close()
+					if(backpanel) then
+						backpanel:Close()
+					end
+					else
+						LocalPlayer():ChatPrint("You cannot afford bail!")
+				end
+			end
+		end
+end
